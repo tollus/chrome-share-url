@@ -1,0 +1,51 @@
+<html>
+	<head>
+		<title>Options</title>
+		<link rel="stylesheet" href="jquery/css/jquery-ui.min.css" />
+		<style type="text/css">
+
+			body {
+				font-family: 'Segoe UI', Tahoma, sans-serif;
+				font-size: 75%;
+				margin: 25px;
+			}
+
+			div.section {
+				width: 450px;
+			}
+
+			label {
+				width: 25%;
+				float: left;
+				padding: 1px 0;
+			}
+
+			input[type="text"] {
+				float: left;
+				width: 65%;
+				padding: 1px 0;
+			}
+
+			div.clear {
+				clear: both;
+			}
+
+		</style>
+		<script src="jquery/jquery-2.0.3.min.js"></script>
+		<script src="jquery/jquery-ui.min.js"></script>
+	</head>
+	<body>
+		<h1>Options</h1>
+
+		<div class="section">
+			<label for="computer-name">Computer Name: </label>
+			<input type="text" id="computer-name" />
+
+			<div class="clear">&nbsp;</div>
+
+			<button type="button" id="save-button">Save Changes</button>
+		</div>
+
+		<script src="options.js"></script>
+	</body>
+</html>
