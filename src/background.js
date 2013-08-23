@@ -4,7 +4,15 @@ var computerId = null;
 function genericOnClick(info, tab) {
 	console.log("link " + info.linkUrl + " clicked");
 
-  var data = {from: computerId, link: info.linkUrl};
+  var data = {from: computerId, link: info.linkUrl, to: null};
+
+  if (info.menuItemId !== contextMenuId){
+    for( var x in menuData ){
+      if(menuData[x] == info.menuItemId) {
+        data.to = x;
+      }
+    }
+  }
 
   chrome.storage.sync.set(data, function(){
     var error = chrome.runtime ?
@@ -29,28 +37,52 @@ function createContextMenu(force) {
   menuData = {};
 
   chrome.storage.sync.get('computers', function(items){
-  	console.log("created contextMenu");
-    contextMenuId = chrome.contextMenus.create(
-          {"title": "Open on other computer(s)",
-            "contexts":['link'],
-            "onclick": genericOnClick,
-            "targetUrlPatterns":["http://*/*","https://*/*"]
+    var otherComputers = 0;
+
+    if(items.computers) {
+      for (var c in items.computers) {
+        if(c != computerId) {
+          otherComputers++;
+        }
+      }
+    }
+
+    var useSubmenu = (otherComputers > 1);
+
+  	console.log("creating contextMenu");
+
+    if(!useSubmenu){
+      contextMenuId = chrome.contextMenus.create(
+          {'title': 'Open on other computer',
+            'contexts':['link'],
+            'onclick': genericOnClick,
+            'targetUrlPatterns':['http://*/*','https://*/*']
+           });
+    } else {
+      contextMenuId = chrome.contextMenus.create(
+          {'title': 'Open on other computers',
+            'contexts':['link'],
+            'onclick': genericOnClick,
+            'targetUrlPatterns':['http://*/*','https://*/*']
            });
 
-    if(items.computers && (items.computers.length > 1 || !items.computers[computerId])) {
+      console.log('Adding child menus for computers.');
       child = chrome.contextMenus.create({
         'title': 'Send to all',
+        'parentId': contextMenuId,
+        'contexts':['link'],
         'onclick': genericOnClick,
-        'parentId': contextMenuId
+        'targetUrlPatterns':['http://*/*','https://*/*']
       });
 
-      console.log('Adding child menus for computers.');
       for (var c in items.computers) {
         if(c != computerId) {
           menuData[c] = chrome.contextMenus.create({
             'title': 'Send to ' + items.computers[c],
+            'parentId': contextMenuId,
+            'contexts':['link'],
             'onclick': genericOnClick,
-            'parentId': contextMenuId
+            'targetUrlPatterns':['http://*/*','https://*/*']
           });
         }
       }
@@ -121,6 +153,12 @@ chrome.storage.onChanged.addListener(function(changes, storageNamespace) {
 
         // received my message, can be ignored
         if (items.from == computerId) return;
+
+        // received message not for me, can be ignored
+        if (items.to && items.to != computerId) {
+          console.log('received message not for me, ignoring... (destined for %s)', items.to);
+          return;
+        };
 
         var computerName = 'Unnamed ' + items.from;
         if (items.computers && items.computers[items.from]) {
