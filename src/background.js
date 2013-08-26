@@ -54,15 +54,15 @@ function createContextMenu(force) {
     if(!useSubmenu){
       contextMenuId = chrome.contextMenus.create(
           {'title': 'Open on other computer',
-            'contexts':['link'],
             'onclick': genericOnClick,
+            'contexts':['link'],
             'targetUrlPatterns':['http://*/*','https://*/*']
            });
     } else {
       contextMenuId = chrome.contextMenus.create(
           {'title': 'Open on other computers',
-            'contexts':['link'],
             'onclick': genericOnClick,
+            'contexts':['link'],
             'targetUrlPatterns':['http://*/*','https://*/*']
            });
 
@@ -70,8 +70,8 @@ function createContextMenu(force) {
       child = chrome.contextMenus.create({
         'title': 'Send to all',
         'parentId': contextMenuId,
-        'contexts':['link'],
         'onclick': genericOnClick,
+        'contexts':['link'],
         'targetUrlPatterns':['http://*/*','https://*/*']
       });
 
@@ -80,20 +80,68 @@ function createContextMenu(force) {
           menuData[c] = chrome.contextMenus.create({
             'title': 'Send to ' + items.computers[c],
             'parentId': contextMenuId,
-            'contexts':['link'],
             'onclick': genericOnClick,
+            'contexts':['link'],
             'targetUrlPatterns':['http://*/*','https://*/*']
           });
         }
       }
+
+      chrome.contextMenus.create({
+        'parentId': contextMenuId,
+        'type': 'separator',
+        'contexts':['link'],
+        'targetUrlPatterns':['http://*/*','https://*/*']
+      });
+
+      chrome.contextMenus.create({
+        'title': 'Configure this computer\'s name',
+        'parentId': contextMenuId,
+        'contexts':['link'],
+        'targetUrlPatterns':['http://*/*','https://*/*'],
+        'onclick': openOptionsTab
+      })
     }
   });
 };
+
+function openOptionsTab(){
+  var optionsUrl = chrome.extension.getURL('options.html');
+
+  chrome.tabs.query({url: optionsUrl}, function(tabs) {
+    if (tabs.length) {
+      chrome.tabs.update(tabs[0].id, {active: true});
+    } else {
+      chrome.tabs.create({url: optionsUrl});
+    }
+  });
+}
 
 function findComputerId(){
   if(computerId) return;
 
   findComputerId = function(){};
+
+  var checkComputerName = function(computerId){
+    // check that computerName is set
+    chrome.storage.sync.get('computerName', function(settings){
+      if(settings.computerName) {
+        console.log('Found computerName: %s', settings.computerName);
+      } else {
+        settings.computerName = 'Unnamed ' + computerId;
+        chrome.storage.sync.set(settings, function(){
+            var error = chrome.runtime ?
+                        chrome.runtime.lastError : chrome.extension.lastError;
+            if (error) {
+              console.error('Unable to sync computerName: %s', error);
+              alert('Unable to sync computerName: ' + error);
+            }
+
+            console.log('Updated computerName: %s', settings.computerName);
+          });
+        }
+    });
+  };
 
   chrome.storage.local.get(function(items){
     var error = chrome.runtime ?
@@ -106,6 +154,7 @@ function findComputerId(){
     if (items && items.computerId) {
       computerId = items.computerId;
       console.log('Found computerid: %s', computerId);
+      checkComputerName(computerId);
       return;
     }
 
@@ -119,8 +168,9 @@ function findComputerId(){
       }
 
       console.log('Saved computerid: %s', computerId);
-    })
 
+      checkComputerName(computerId);
+    });
   });
 }
 
