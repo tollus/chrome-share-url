@@ -14,14 +14,7 @@ function genericOnClick(info, tab) {
     }
   }
 
-  chrome.storage.sync.set(data, function(){
-    var error = chrome.runtime ?
-                chrome.runtime.lastError : chrome.extension.lastError;
-    if (error) {
-      console.error('Unable to sync data: %s', error);
-      alert('Unable to sync data: ' + error);
-    }
-  });
+  setSyncStorage(data);
 }
 
 var contextMenuId;
@@ -218,10 +211,23 @@ chrome.storage.onChanged.addListener(function(changes, storageNamespace) {
         items.computers[computerId] = changes.computerName.newValue;
         items.link = null;
 
-        chrome.storage.sync.set(items);
+        setSyncStorage(items);
       });
     }
   }
 });
+
+function setSyncStorage(data, callback) {
+  chrome.storage.sync.set(data, function(){
+    var error = chrome.runtime ?
+                chrome.runtime.lastError : chrome.extension.lastError;
+    if (error) {
+      console.error('Unable to sync data: %s', error);
+      alert('Unable to sync data: ' + error);
+    }
+
+    if(callback) callback();
+  });
+}
 
 findComputerId();
