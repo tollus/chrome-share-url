@@ -122,28 +122,7 @@ function findComputerId(){
 
   findComputerId = function(){};
 
-  var checkComputerName = function(computerId){
-    // check that computerName is set
-    chrome.storage.sync.get('computerName', function(settings){
-      if(settings.computerName) {
-        console.log('Found computerName: %s', settings.computerName);
-      } else {
-        settings.computerName = 'Unnamed ' + computerId;
-        chrome.storage.sync.set(settings, function(){
-            var error = chrome.runtime ?
-                        chrome.runtime.lastError : chrome.extension.lastError;
-            if (error) {
-              console.error('Unable to sync computerName: %s', error);
-              alert('Unable to sync computerName: ' + error);
-            }
-
-            console.log('Updated computerName: %s', settings.computerName);
-          });
-        }
-    });
-  };
-
-  chrome.storage.local.get(function(items){
+  chrome.storage.local.get(function(settings){
     var error = chrome.runtime ?
                 chrome.runtime.lastError : chrome.extension.lastError;
     if (error) {
@@ -151,15 +130,24 @@ function findComputerId(){
       alert('Unable to load local data: ' + error);
     }
 
-    if (items && items.computerId) {
-      computerId = items.computerId;
+    if (settings && settings.computerId) {
+      computerId = settings.computerId;
       console.log('Found computerid: %s', computerId);
-      checkComputerName(computerId);
-      return;
+      if(settings.computerName) {
+        console.log('Found computerName: %s', settings.computerName);
+        return;
+      } else {
+        settings.computerName = 'Unnamed ' + computerId;
+      }
+    } else {
+      computerId = Math.round(Math.random() * Date.now() * 1000).toString(36);
+      settings = {
+        computerId: computerId,
+        computerName = 'Unnamed ' + computerId
+      };
     }
 
-    computerId = Math.round(Math.random() * Date.now() * 1000).toString(36);
-    chrome.storage.local.set({computerId: computerId}, function(){
+    chrome.storage.local.set(settings, function(){
       var error = chrome.runtime ?
                   chrome.runtime.lastError : chrome.extension.lastError;
       if (error) {
@@ -167,9 +155,7 @@ function findComputerId(){
         alert('Unable to save local data: ' + error);
       }
 
-      console.log('Saved computerid: %s', computerId);
-
-      checkComputerName(computerId);
+      console.log('Saved computer id %s name %s', settings.computerId, settings.computerName);
     });
   });
 }
