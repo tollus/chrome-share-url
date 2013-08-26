@@ -1,7 +1,7 @@
 {
   "name": "Share Url",
   "description": "Adds context menu item to share url with other computer(s)",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "permissions": ["contextMenus","storage"],
   "background": {
     "scripts": ["background.js"]

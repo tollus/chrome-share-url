@@ -142,8 +142,8 @@ function findComputerId(){
     } else {
       computerId = Math.round(Math.random() * Date.now() * 1000).toString(36);
       settings = {
-        computerId: computerId,
-        computerName = 'Unnamed ' + computerId
+        'computerId': computerId,
+        'computerName': 'Unnamed ' + computerId
       };
     }
 
