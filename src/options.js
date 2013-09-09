@@ -1,6 +1,7 @@
 ;(function($, undefined){
+  "use strict";
 
-	var $computerName;
+  var $computerName;
 
 	var settings;
 
@@ -8,7 +9,7 @@
 
 	function init(){
 		$computerName = $('#computer-name');
-		$saveButton = $('#save-button').button().on('click', saveChanges);
+		$('#save-button').button().on('click', saveChanges);
 
 		chrome.storage.local.get(null, function(items){
 			var changed = false;

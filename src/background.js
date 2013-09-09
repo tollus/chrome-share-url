@@ -1,233 +1,237 @@
-var computerId = null;
+;(function(){
+  "use strict";
 
-// A generic onclick callback function.
-function genericOnClick(info, tab) {
-	console.log("link " + info.linkUrl + " clicked");
+  // remember this computer id instead of always calling settings
+  var computerId = null;
 
-  var data = {from: computerId, link: info.linkUrl, to: null};
+  // store id to prevent creating context menu more than once
+  var contextMenuId;
 
-  if (info.menuItemId !== contextMenuId){
-    for( var x in menuData ){
-      if(menuData[x] == info.menuItemId) {
-        data.to = x;
-      }
-    }
-  }
+  // debug logging
+  //var _log = function() {};
+  //var _error = function() {};
+  var _log = function() {console.log.apply(console, arguments);};
+  var _error = function() {console.error.apply(console, arguments);};
 
-  setSyncStorage(data);
-}
+  // Set up context menu tree at install time.
+  function createContextMenu(force) {
+    if (contextMenuId && !force) return;
 
-var contextMenuId;
-var menuData;
-
-// Set up context menu tree at install time.
-function createContextMenu(force) {
-  if (contextMenuId && !force) return;
-
-  if (contextMenuId) {
-    chrome.contextMenus.removeAll();
-  }
-  menuData = {};
-
-  chrome.storage.sync.get('computers', function(items){
-    var otherComputers = 0;
-
-    if(items.computers) {
-      for (var c in items.computers) {
-        if(c != computerId) {
-          otherComputers++;
-        }
-      }
+    if (contextMenuId) {
+      chrome.contextMenus.removeAll();
     }
 
-    var useSubmenu = (otherComputers > 1);
+    chrome.storage.sync.get('computers', function(items){
+      var otherComputers = 0;
 
-  	console.log("creating contextMenu");
-
-    if(!useSubmenu){
-      contextMenuId = chrome.contextMenus.create(
-          {'title': 'Open on other computer',
-            'onclick': genericOnClick,
-            'contexts':['link'],
-            'targetUrlPatterns':['http://*/*','https://*/*']
-           });
-    } else {
-      contextMenuId = chrome.contextMenus.create(
-          {'title': 'Open on other computers',
-            'onclick': genericOnClick,
-            'contexts':['link'],
-            'targetUrlPatterns':['http://*/*','https://*/*']
-           });
-
-      console.log('Adding child menus for computers.');
-      child = chrome.contextMenus.create({
-        'title': 'Send to all',
-        'parentId': contextMenuId,
-        'onclick': genericOnClick,
-        'contexts':['link'],
-        'targetUrlPatterns':['http://*/*','https://*/*']
-      });
-
-      for (var c in items.computers) {
-        if(c != computerId) {
-          menuData[c] = chrome.contextMenus.create({
-            'title': 'Send to ' + items.computers[c],
-            'parentId': contextMenuId,
-            'onclick': genericOnClick,
-            'contexts':['link'],
-            'targetUrlPatterns':['http://*/*','https://*/*']
-          });
+      if(items.computers) {
+        for (var c in items.computers) {
+          if(c !== computerId) {
+            otherComputers++;
+          }
         }
       }
 
-      chrome.contextMenus.create({
-        'parentId': contextMenuId,
-        'type': 'separator',
-        'contexts':['link'],
-        'targetUrlPatterns':['http://*/*','https://*/*']
-      });
+      var useSubmenu = (otherComputers > 1);
 
-      chrome.contextMenus.create({
-        'title': 'Configure this computer\'s name',
-        'parentId': contextMenuId,
-        'contexts':['link'],
-        'targetUrlPatterns':['http://*/*','https://*/*'],
-        'onclick': openOptionsTab
-      })
-    }
-  });
-};
+    	_log("creating contextMenu");
 
-function openOptionsTab(){
-  var optionsUrl = chrome.extension.getURL('options.html');
-
-  chrome.tabs.query({url: optionsUrl}, function(tabs) {
-    if (tabs.length) {
-      chrome.tabs.update(tabs[0].id, {active: true});
-    } else {
-      chrome.tabs.create({url: optionsUrl});
-    }
-  });
-}
-
-function findComputerId(){
-  if(computerId) return;
-
-  findComputerId = function(){};
-
-  chrome.storage.local.get(function(settings){
-    var error = chrome.runtime ?
-                chrome.runtime.lastError : chrome.extension.lastError;
-    if (error) {
-      console.error('Unable to load local data: %s', error);
-      alert('Unable to load local data: ' + error);
-    }
-
-    if (settings && settings.computerId) {
-      computerId = settings.computerId;
-      console.log('Found computerid: %s', computerId);
-      if(settings.computerName) {
-        console.log('Found computerName: %s', settings.computerName);
-        return;
+      if(!useSubmenu){
+        contextMenuId = chrome.contextMenus.create(
+            {'title': 'Open on other computer',
+              'onclick': contextMenuClick,
+              'contexts':['link'],
+              'targetUrlPatterns':['http://*/*','https://*/*']
+             });
       } else {
-        settings.computerName = 'Unnamed ' + computerId;
-      }
-    } else {
-      computerId = Math.round(Math.random() * Date.now() * 1000).toString(36);
-      settings = {
-        'computerId': computerId,
-        'computerName': 'Unnamed ' + computerId
-      };
-    }
+        contextMenuId = chrome.contextMenus.create(
+            {'title': 'Open on other computers',
+              'onclick': contextMenuClick,
+              'contexts':['link'],
+              'targetUrlPatterns':['http://*/*','https://*/*']
+             });
 
-    chrome.storage.local.set(settings, function(){
+        _log('Adding child menus for computers.');
+        chrome.contextMenus.create(
+          {'title': 'Send to all',
+            'parentId': contextMenuId,
+            'onclick': function(info, tab) { contextMenuClick (info, tab, null); },
+            'contexts':['link'],
+            'targetUrlPatterns':['http://*/*','https://*/*']
+        });
+
+        for (var c in items.computers) {
+          if(c !== computerId) {
+            chrome.contextMenus.create(
+              {'title': 'Send to ' + items.computers[c],
+                'parentId': contextMenuId,
+                'onclick': function(info, tab) { contextMenuClick (info, tab, c); },
+                'contexts':['link'],
+                'targetUrlPatterns':['http://*/*','https://*/*']
+            });
+          }
+        }
+
+        chrome.contextMenus.create(
+          {'parentId': contextMenuId,
+            'type': 'separator',
+            'contexts':['link'],
+            'targetUrlPatterns':['http://*/*','https://*/*']
+        });
+
+        chrome.contextMenus.create(
+          {'title': 'Configure this computer\'s name',
+            'parentId': contextMenuId,
+            'contexts':['link'],
+            'targetUrlPatterns':['http://*/*','https://*/*'],
+            'onclick': openOptionsTab
+        })
+      }
+    });
+  };
+
+  function openOptionsTab(){
+    var optionsUrl = chrome.extension.getURL('options.html');
+
+    chrome.tabs.query({url: optionsUrl}, function(tabs) {
+      if (tabs.length) {
+        chrome.tabs.update(tabs[0].id, {active: true});
+      } else {
+        chrome.tabs.create({url: optionsUrl});
+      }
+    });
+  }
+
+  function findComputerId(){
+    if(computerId) return;
+
+    findComputerId = function(){};
+
+    chrome.storage.local.get(null, function(settings){
       var error = chrome.runtime ?
                   chrome.runtime.lastError : chrome.extension.lastError;
       if (error) {
-        console.error('Unable to save local data: %s', error);
-        alert('Unable to save local data: ' + error);
+        _error('Unable to load local data: %s', error);
+        alert('Unable to load local data: ' + error);
       }
 
-      console.log('Saved computer id %s name %s', settings.computerId, settings.computerName);
-    });
-  });
-}
-
-if (chrome.tabs) {
-    chrome.tabs.onUpdated.addListener(function(tabid, changeInfo, tab) {
-        if (tab.active && changeInfo.status === "loading")
-            createContextMenu();
-    });
-    chrome.tabs.onActivated.addListener(function() {
-        createContextMenu();
-    });
-}
-
-chrome.runtime.onInstalled.addListener(createContextMenu);
-
-chrome.storage.onChanged.addListener(function(changes, storageNamespace) {
-  if (storageNamespace == 'sync') {
-    console.log('Sync\'d content incoming: ', changes);
-
-    if (changes.computers) {
-      // reset the names
-      createContextMenu(true);
-      return;
-    }
-
-    if (changes.link) {
-      chrome.storage.sync.get(function(items){
-        // invalid data set
-        if (!items.from || !items.link) return;
-
-        // received my message, can be ignored
-        if (items.from == computerId) return;
-
-        // received message not for me, can be ignored
-        if (items.to && items.to != computerId) {
-          console.log('received message not for me, ignoring... (destined for %s)', items.to);
+      if (settings && settings.computerId) {
+        computerId = settings.computerId;
+        _log('Found computerid: %s', computerId);
+        if(settings.computerName) {
+          _log('Found computerName: %s', settings.computerName);
           return;
+        } else {
+          settings.computerName = 'Unnamed ' + computerId;
+        }
+      } else {
+        computerId = Math.round(Math.random() * Date.now() * 1000).toString(36);
+        settings = {
+          'computerId': computerId,
+          'computerName': 'Unnamed ' + computerId
         };
+      }
 
-        var computerName = 'Unnamed ' + items.from;
-        if (items.computers && items.computers[items.from]) {
-          computerName = items.computers[items.from];
+      chrome.storage.local.set(settings, function(){
+        var error = chrome.runtime ?
+                    chrome.runtime.lastError : chrome.extension.lastError;
+        if (error) {
+          _error('Unable to save local data: %s', error);
+          alert('Unable to save local data: ' + error);
         }
 
-        console.log('Opening link to %s from computer %s.',
-            items.link, computerName);
-
-        // received message from other computer, open the tab
-        chrome.tabs.create({ url: items.link });
+        _log('Saved computer id %s name %s', settings.computerId, settings.computerName);
       });
-    }
-  } else if (storageNamespace == 'local') {
-    if (changes.computerName) {
-      // my computer name changed, so send it to other computers
+    });
+  }
 
-      chrome.storage.sync.get(function(items){
-        items.from = computerId;
-        items.computers = items.computers || {};
-        items.computers[computerId] = changes.computerName.newValue;
-        items.link = null;
+  // A generic context menu callback function.
+  function contextMenuClick(info, tab, to) {
+    _log("link " + info.linkUrl + " clicked");
 
-        setSyncStorage(items);
-      });
+    var data = {from: computerId, link: info.linkUrl, to: to || null};
+
+    // send link to other computer(s)
+    setSyncStorage(data);
+  }
+
+  function setSyncStorage(data, callback) {
+    chrome.storage.sync.set(data, function(){
+      var error = chrome.runtime ?
+                  chrome.runtime.lastError : chrome.extension.lastError;
+      if (error) {
+        _error('Unable to sync data: %s', error);
+        alert('Unable to sync data: ' + error);
+      }
+
+      if(callback) callback();
+    });
+  }
+
+  function storageChanged(changes, storageNamespace) {
+    if (storageNamespace === 'sync') {
+      _log('Sync\'d content incoming: ', changes);
+
+      if (changes.computers) {
+        // reset the names
+        createContextMenu(true);
+        return;
+      }
+
+      if (changes.link) {
+        chrome.storage.sync.get(function(items){
+          // invalid data set
+          if (!items.from || !items.link) return;
+
+          // received my message, can be ignored
+          if (items.from === computerId) return;
+
+          // received message not for me, can be ignored
+          if (items.to && items.to !== computerId) {
+            _log('received message not for me, ignoring... (destined for %s)', items.to);
+            return;
+          };
+
+          var computerName = 'Unnamed ' + items.from;
+          if (items.computers && items.computers[items.from]) {
+            computerName = items.computers[items.from];
+          }
+
+          _log('Opening link to %s from computer %s.',
+              items.link, computerName);
+
+          // received message from other computer, open the tab
+          chrome.tabs.create({ url: items.link });
+        });
+      }
+    } else if (storageNamespace === 'local') {
+      if (changes.computerName) {
+        // my computer name changed, so send it to other computers
+
+        chrome.storage.sync.get(function(items){
+          items.from = computerId;
+          items.computers = items.computers || {};
+          items.computers[computerId] = changes.computerName.newValue;
+          items.link = null;
+
+          setSyncStorage(items);
+        });
+      }
     }
   }
-});
 
-function setSyncStorage(data, callback) {
-  chrome.storage.sync.set(data, function(){
-    var error = chrome.runtime ?
-                chrome.runtime.lastError : chrome.extension.lastError;
-    if (error) {
-      console.error('Unable to sync data: %s', error);
-      alert('Unable to sync data: ' + error);
-    }
+  if (chrome.tabs) {
+      chrome.tabs.onUpdated.addListener(function(tabid, changeInfo, tab) {
+          if (tab.active && changeInfo.status === "loading")
+              createContextMenu();
+      });
+      chrome.tabs.onActivated.addListener(function() {
+          createContextMenu();
+      });
+  }
 
-    if(callback) callback();
-  });
-}
+  chrome.runtime.onInstalled.addListener(createContextMenu);
+  chrome.storage.onChanged.addListener(storageChanged);
 
-findComputerId();
+  findComputerId();
+}());
