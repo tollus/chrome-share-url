@@ -1,7 +1,7 @@
 ;(function($, undefined){
-  "use strict";
+    "use strict";
 
-  var $computerName;
+    var $computerName;
 
 	var settings;
 
