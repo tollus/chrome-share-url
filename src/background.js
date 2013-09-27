@@ -13,13 +13,25 @@
   var _log = function() {console.log.apply(console, arguments);};
   var _error = function() {console.error.apply(console, arguments);};
 
+  if (chrome.tabs) {
+    chrome.tabs.onUpdated.addListener(function(tabid, changeInfo, tab) {
+      if (tab.active && changeInfo.status === "loading")
+        createContextMenu();
+    });
+    chrome.tabs.onActivated.addListener(function() {
+      createContextMenu();
+    });
+  }
+
+  chrome.runtime.onInstalled.addListener(createContextMenu);
+  chrome.storage.onChanged.addListener(storageChanged);
+  chrome.contextMenus.onClicked.addListener(contextMenuClicked);
+
   // Set up context menu tree at install time.
   function createContextMenu(force) {
     if (contextMenuId && !force) return;
 
-    if (contextMenuId) {
-      chrome.contextMenus.removeAll();
-    }
+    chrome.contextMenus.removeAll();
 
     chrome.storage.sync.get('computers', function(items){
       var otherComputers = 0;
@@ -34,19 +46,19 @@
 
       var useSubmenu = (otherComputers > 1);
 
-    	_log("creating contextMenu");
+      _log("creating contextMenu");
 
       if(!useSubmenu){
         contextMenuId = chrome.contextMenus.create(
             {'title': 'Open on other computer',
-              'onclick': contextMenuClick,
+              'id': 'base',
               'contexts':['link'],
               'targetUrlPatterns':['http://*/*','https://*/*']
              });
       } else {
         contextMenuId = chrome.contextMenus.create(
             {'title': 'Open on other computers',
-              'onclick': contextMenuClick,
+              'id': 'base',
               'contexts':['link'],
               'targetUrlPatterns':['http://*/*','https://*/*']
              });
@@ -55,7 +67,7 @@
         chrome.contextMenus.create(
           {'title': 'Send to all',
             'parentId': contextMenuId,
-            'onclick': function(info, tab) { contextMenuClick (info, tab, null); },
+            'id': 'all',
             'contexts':['link'],
             'targetUrlPatterns':['http://*/*','https://*/*']
         });
@@ -65,7 +77,7 @@
             chrome.contextMenus.create(
               {'title': 'Send to ' + items.computers[c],
                 'parentId': contextMenuId,
-                'onclick': function(info, tab) { contextMenuClick (info, tab, c); },
+                'id': 'computer_' + c,
                 'contexts':['link'],
                 'targetUrlPatterns':['http://*/*','https://*/*']
             });
@@ -75,6 +87,7 @@
         chrome.contextMenus.create(
           {'parentId': contextMenuId,
             'type': 'separator',
+            'id': 'sep1',
             'contexts':['link'],
             'targetUrlPatterns':['http://*/*','https://*/*']
         });
@@ -82,13 +95,36 @@
         chrome.contextMenus.create(
           {'title': 'Configure this computer\'s name',
             'parentId': contextMenuId,
+            'id': 'settings',
             'contexts':['link'],
-            'targetUrlPatterns':['http://*/*','https://*/*'],
-            'onclick': openOptionsTab
+            'targetUrlPatterns':['http://*/*','https://*/*']
         })
       }
     });
-  };
+  }
+
+  function contextMenuClicked(info, tab) {
+    // based on the menuItemId, call the click function
+    if (info.menuItemId === 'settings') {
+      _log('opening options tab');
+      openOptionsTab();
+      return;
+    }
+
+    if (info.menuItemId === 'base' || info.menuItemId === 'all') {
+      _log('Sending to all computers');
+      return contextMenuClick(info, tab, null);
+    }
+
+    if (info.menuItemId.indexOf('_') > -1) {
+      var parts = info.menuItmeId.split('_');
+      switch (parts[0]) {
+        case 'computer':
+          _log('Sending to computer %s', parts[1]);
+          return contextMenuClick(info, tab, parts[1]);
+      }
+    }
+  }
 
   function openOptionsTab(){
     var optionsUrl = chrome.extension.getURL('options.html');
@@ -171,6 +207,7 @@
   function storageChanged(changes, storageNamespace) {
     if (storageNamespace === 'sync') {
       _log('Sync\'d content incoming: ', changes);
+      _log('My Computerid: ', computerId);
 
       if (changes.computers) {
         // reset the names
@@ -219,19 +256,6 @@
       }
     }
   }
-
-  if (chrome.tabs) {
-      chrome.tabs.onUpdated.addListener(function(tabid, changeInfo, tab) {
-          if (tab.active && changeInfo.status === "loading")
-              createContextMenu();
-      });
-      chrome.tabs.onActivated.addListener(function() {
-          createContextMenu();
-      });
-  }
-
-  chrome.runtime.onInstalled.addListener(createContextMenu);
-  chrome.storage.onChanged.addListener(storageChanged);
 
   findComputerId();
 }());
