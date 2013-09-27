@@ -117,7 +117,7 @@
         }
 
         if (info.menuItemId.indexOf('_') > -1) {
-            var parts = info.menuItmeId.split('_');
+            var parts = info.menuItemId.split('_');
             switch (parts[0]) {
                 case 'computer':
                     _log('Sending to computer %s', parts[1]);
