@@ -1,5 +1,11 @@
-;(function(){
+;(function(undefined){
     "use strict";
+
+    var shareUrls = {
+        'gplus': 'https://plus.google.com/share?url={url}',
+        'twit': 'http://www.twitter.com/share?url={url}',
+        'fbook': 'http://www.facebook.com/share.php?u={url}'
+    };
 
     // remember this computer id instead of always calling settings
     var computerId = null;
@@ -27,14 +33,29 @@
     chrome.storage.onChanged.addListener(storageChanged);
     chrome.contextMenus.onClicked.addListener(contextMenuClicked);
 
+    function i18n_msg(messageName, substitutions) {
+        if (substitutions === undefined)
+            return chrome.i18n.getMessage(messageName);
+
+        return chrome.i18n.getMessage(messageName, substitutions);
+    }
+
     // Set up context menu tree at install time.
     function createContextMenu(force) {
         if (contextMenuId && !force) return;
 
-        chrome.contextMenus.removeAll();
-
+        chrome.storage.local.get(function(settings){
         chrome.storage.sync.get('computers', function(items){
             var otherComputers = 0;
+
+            var addContextMenu = function(title, id, extra) {
+                var opts = extra || {};
+                opts.title = title;
+                opts.id = id;
+                opts.contexts = opts.contexts || ['link'];
+                opts.targetUrlPatterns = opts.targetUrlPatterns || ['http://*/*','https://*/*'];
+                return chrome.contextMenus.create(opts)
+            }
 
             if(items.computers) {
                 for (var c in items.computers) {
@@ -44,62 +65,46 @@
                 }
             }
 
-            var useSubmenu = (otherComputers > 1);
+            var wantsSocial = (settings.socialShares || '').length > 0;
+            var useSubmenu = (otherComputers > 1) || wantsSocial;
 
             _log("creating contextMenu");
 
+            chrome.contextMenus.removeAll();
+
             if(!useSubmenu){
-                contextMenuId = chrome.contextMenus.create(
-                        {'title': 'Open on other computer',
-                            'id': 'base',
-                            'contexts':['link'],
-                            'targetUrlPatterns':['http://*/*','https://*/*']
-                         });
+                contextMenuId = addContextMenu(i18n_msg('contextmenu_share_single'), 'all');
             } else {
-                contextMenuId = chrome.contextMenus.create(
-                        {'title': 'Open on other computers',
-                            'id': 'base',
-                            'contexts':['link'],
-                            'targetUrlPatterns':['http://*/*','https://*/*']
-                         });
+                contextMenuId = addContextMenu(i18n_msg('contextmenu_share_multi'), 'base');
 
                 _log('Adding child menus for computers.');
-                chrome.contextMenus.create(
-                    {'title': 'Send to all',
-                        'parentId': contextMenuId,
-                        'id': 'all',
-                        'contexts':['link'],
-                        'targetUrlPatterns':['http://*/*','https://*/*']
-                });
+                addContextMenu(i18n_msg('contextmenu_share_all'), 'all', {'parentId': contextMenuId});
 
-                for (var c in items.computers) {
-                    if(c !== computerId) {
-                        chrome.contextMenus.create(
-                            {'title': 'Send to ' + items.computers[c],
-                                'parentId': contextMenuId,
-                                'id': 'computer_' + c,
-                                'contexts':['link'],
-                                'targetUrlPatterns':['http://*/*','https://*/*']
-                        });
+                if (otherComputers > 1) {
+                    for (var c in items.computers) {
+                        if(c !== computerId) {
+                            var menu = i18n_msg('contextmenu_share_computer', [items.computers[c]]);
+                            addContextMenu(menu, 'computer_' + c, {'parentId': contextMenuId});
+                        }
                     }
                 }
 
-                chrome.contextMenus.create(
-                    {'parentId': contextMenuId,
-                        'type': 'separator',
-                        'id': 'sep1',
-                        'contexts':['link'],
-                        'targetUrlPatterns':['http://*/*','https://*/*']
-                });
+                addContextMenu('sep1', 'sep1', {'parentId': contextMenuId, 'type': 'separator'});
 
-                chrome.contextMenus.create(
-                    {'title': 'Configure this computer\'s name',
-                        'parentId': contextMenuId,
-                        'id': 'settings',
-                        'contexts':['link'],
-                        'targetUrlPatterns':['http://*/*','https://*/*']
-                })
+                if(wantsSocial) {
+                    for (var s in shareUrls) {
+                        if(settings.socialShares.indexOf(s) > -1) {
+                            var menu = i18n_msg('contextmenu_social_' + s);
+                            addContextMenu(menu, 'social_' + s, {'parentId': contextMenuId});
+                        }
+                    }
+
+                    addContextMenu('sep2', 'sep2', {'parentId': contextMenuId, 'type': 'separator'});
+                }
+
+                addContextMenu(i18n_msg('contextmenu_configure'), 'settings', {'parentId': contextMenuId});
             }
+        });
         });
     }
 
@@ -111,7 +116,7 @@
             return;
         }
 
-        if (info.menuItemId === 'base' || info.menuItemId === 'all') {
+        if (info.menuItemId === 'all') {
             _log('Sending to all computers');
             return contextMenuClick(info, tab, null);
         }
@@ -122,6 +127,9 @@
                 case 'computer':
                     _log('Sending to computer %s', parts[1]);
                     return contextMenuClick(info, tab, parts[1]);
+                case 'social':
+                    _log('Sharing to social service %s', parts[1]);
+                    return;
             }
         }
     }
@@ -141,8 +149,6 @@
     function findComputerId(){
         if(computerId) return;
 
-        findComputerId = function(){};
-
         chrome.storage.local.get(null, function(settings){
             var error = chrome.runtime ?
                                     chrome.runtime.lastError : chrome.extension.lastError;
@@ -158,13 +164,13 @@
                     _log('Found computerName: %s', settings.computerName);
                     return;
                 } else {
-                    settings.computerName = 'Unnamed ' + computerId;
+                    settings.computerName = i18n_msg('settings_default_computername', [ computerId ]);
                 }
             } else {
                 computerId = Math.round(Math.random() * Date.now() * 1000).toString(36);
                 settings = {
                     'computerId': computerId,
-                    'computerName': 'Unnamed ' + computerId
+                    'computerName': i18n_msg('settings_default_computername', [ computerId ])
                 };
             }
 
@@ -253,6 +259,10 @@
 
                     setSyncStorage(items);
                 });
+            }
+            if (changes.socialShares) {
+                // reset the menu
+                createContextMenu(true);
             }
         }
     }

@@ -1,0 +1,102 @@
+{
+  "extension_name" : {
+    "message": "Share Url",
+    "description": "Name of the extension"
+  },
+  "extension_description" : {
+    "message": "Adds context menu item to share links with other computer(s)",
+    "description": "Description of the extension"
+  },
+
+
+  /**** Default Settings ****/
+  "settings_default_computername" : {
+    "message": "Unnamed $ID$",
+    "description": "Default computer name to be defined",
+    "placeholders": {
+      "id": {
+        "content": "$1",
+        "example": "xyz123"
+      }
+    }
+  },
+
+
+  /**** Basic Context Menu Items ****/
+  "contextmenu_share_single" : {
+    "message": "Open on other computer",
+    "description": "Context menu item for sharing link with other computer, when only 1 other computer is sync'd"
+  },
+  "contextmenu_share_multi" : {
+    "message": "Open on other computers",
+    "description": "Context menu item for sharing link with other computers, when more than 1 other computer are sync'd"
+  },
+  "contextmenu_share_all" : {
+    "message": "Send to all",
+    "description": "Context menu item for sharing link with all computers"
+  },
+  "contextmenu_share_computer" : {
+    "message": "Send to $COMPUTERNAME$",
+    "description": "Context menu item for sharing link with specific computer",
+    "placeholders": {
+      "computername": {
+        "content": "$1",
+        "example": "Computer xyz123"
+      }
+    }
+  },
+  "contextmenu_configure" : {
+    "message": "Configure this computer's name",
+    "description": "Context menu item for opening the settings page"
+  },
+
+  /**** Social Context Menu Items ****/
+
+  "contextmenu_social_gplus" : {
+    "message": "Share link on Google+",
+    "description": "Context menu item for sharing link with google plus"
+  },
+  "contextmenu_social_fbook" : {
+    "message": "Share link on Facebook",
+    "description": "Context menu item for sharing link with facebook"
+  },
+  "contextmenu_social_twit" : {
+    "message": "Share link on Twitter",
+    "description": "Context menu item for sharing link with twitter"
+  },
+
+  /**** Options page ****/
+  "options_title": {
+    "message": "Options",
+    "description": "Title for options page"
+  },
+  "options_label_computerName" : {
+    "message": "Computer Name:",
+    "description": "Label for computer name in options page"
+  },
+  "options_legend_social" : {
+    "message": "Services",
+    "description": "Label for the box surrounding the social services"
+  },
+  "options_choose_social" : {
+    "message": "Choose which services you want to be able to share with from the menu.",
+    "description": "Message describing choosing the social services"
+  },
+  "options_button_save": {
+    "message": "Save Changes",
+    "description": "Text for the save button in options page"
+  },
+  "options_label_social_fbook": {
+    "message": "Facebook",
+    "description": "Checkbox label for Facebook social option"
+  },
+  "options_label_social_gplus": {
+    "message": "Google Plus",
+    "description": "Checkbox label for Google+ social option"
+  },
+  "options_label_social_twit": {
+    "message": "Twitter",
+    "description": "Checkbox label for Twitter social option"
+  }
+
+}

@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Options</title>
+		<title i18n-content="options_title">Options</title>
 		<link rel="stylesheet" href="jquery/css/jquery-ui.min.css" />
 		<style type="text/css">
 
@@ -15,6 +15,18 @@
 			}
 
 			label {
+				padding: 0 10px;
+			}
+
+			fieldset {
+				padding: 10px 9px;
+			}
+
+			fieldset > div {
+				padding-bottom: 10px;
+			}
+
+			label[for] {
 				width: 25%;
 				float: left;
 				padding: 1px 0;
@@ -31,21 +43,45 @@
 			}
 
 		</style>
-		<script src="jquery/jquery-2.0.3.min.js"></script>
-		<script src="jquery/jquery-ui.min.js"></script>
 	</head>
 	<body>
-		<h1>Options</h1>
+		<h1 i18n-content="options_title">Options</h1>
 
 		<div class="section">
-			<label for="computer-name">Computer Name: </label>
+			<label for="computer-name" i18n-content="options_label_computerName">Computer Name: </label>
 			<input type="text" id="computer-name" />
 
 			<div class="clear">&nbsp;</div>
 
-			<button type="button" id="save-button">Save Changes</button>
+			<fieldset>
+				<legend i18n-content="options_legend_social">Services</legend>
+
+				<div i18n-content="options_choose_social">Choose which services you want to be able to share with from the menu.</div>
+
+				<label>
+					<input type="checkbox" id="use-fbook" />
+					<span i18n-content="options_label_social_fbook">Facebook</span>
+				</label>
+
+				<label>
+					<input type="checkbox" id="use-gplus" />
+					<span i18n-content="options_label_social_gplus">Google Plus</span>
+				</label>
+
+				<label>
+					<input type="checkbox" id="use-twit" />
+					<span i18n-content="options_label_social_twit">Twitter</span>
+				</label>
+			</fieldset>
+
+			<div class="clear">&nbsp;</div>
+
+			<button type="button" id="save-button" i18n-content="options_button_save">Save Changes</button>
 		</div>
 
+		<script src="jquery/jquery-2.0.3.min.js"></script>
+		<script src="options-i18n.js"></script>
+		<script src="jquery/jquery-ui.min.js"></script>
 		<script src="options.js"></script>
 	</body>
 </html>

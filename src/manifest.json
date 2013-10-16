@@ -1,12 +1,13 @@
 {
-  "name": "Share Url",
-  "description": "Adds context menu item to share links with other computer(s)",
+  "name": "__MSG_extension_name__",
+  "description": "__MSG_extension_description__",
   "version": "0.3.6",
   "permissions": ["contextMenus","storage"],
   "background": {
     "scripts": ["background.js"],
     "persistent": false
   },
+  "default_locale": "en",
   "options_page": "options.html",
   "icons": {
     "128": "icon_128.png"
