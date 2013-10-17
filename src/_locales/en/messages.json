@@ -4,7 +4,7 @@
     "description": "Name of the extension"
   },
   "extension_description" : {
-    "message": "Adds context menu item to share links with other computer(s)",
+    "message": "Adds context menu to share links with other computer(s) or with your favorite social application.",
     "description": "Description of the extension"
   },
 
