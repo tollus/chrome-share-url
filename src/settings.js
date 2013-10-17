@@ -40,6 +40,14 @@
                 console.error('Error occurred getting sync settings: %s', error);
             }
 
+            for (var x in sync) {
+                // only pass along the settings to sync ...
+                // we should probably remove these from the storage too
+                if (settingsToSync.indexOf(x) === -1) {
+                    delete sync[x];
+                }
+            }
+
             chrome.storage.local.get(fields, function(local){
                 var error = chrome.runtime ?
                             chrome.runtime.lastError : chrome.extension.lastError;

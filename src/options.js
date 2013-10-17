@@ -24,7 +24,7 @@
 			}
 
 			if (changed) {
-				saveSettings();
+                AppSettings.set(settings, function() {});
 			}
 
 			$computerName.val(settings.computerName);
