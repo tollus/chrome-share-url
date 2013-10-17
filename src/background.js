@@ -29,9 +29,40 @@
         });
     }
 
+    chrome.runtime.onInstalled.addListener(init);
     chrome.runtime.onInstalled.addListener(createContextMenu);
+    chrome.runtime.onStartup.addListener(init);
+    chrome.runtime.onStartup.addListener(createContextMenu);
     chrome.storage.onChanged.addListener(storageChanged);
     chrome.contextMenus.onClicked.addListener(contextMenuClicked);
+
+    function init() {
+        // remove any non-updated computers
+        AppSettings.get(['computers'], function(settings){
+            if (settings.computers) {
+                var computers = {};
+                var removed = [];
+                var changes = false;
+                var monthAgo = new Date(); monthAgo.setMonth(monthAgo.getMonth() - 1);
+                monthAgo = monthAgo.getTime();
+
+                for (var comp in settings.computers) {
+                    if (!settings.computers[comp].name || settings.computers[comp].update < monthAgo) {
+                        // remove and wait for next update
+                        changes = true;
+                        removed.push(settings.computers[comp].name || settings.computers[comp]);
+                    } else {
+                        computers[comp] = settings.computers[comp];
+                    }
+                }
+
+                if (changes) {
+                    _log('Removed inactive/old computers: ' + removed.join(','));
+                    AppSettings.set({computers:computers});
+                }
+            }
+        });
+    }
 
     function i18n_msg(messageName, substitutions) {
         if (substitutions === undefined)
@@ -56,9 +87,9 @@
                 return chrome.contextMenus.create(opts)
             }
 
-            if(settings.computers) {
+            if (settings.computers) {
                 for (var c in settings.computers) {
-                    if(c !== computerId) {
+                    if (c !== computerId) {
                         otherComputers++;
                     }
                 }
@@ -71,7 +102,7 @@
 
             chrome.contextMenus.removeAll();
 
-            if(!useSubmenu){
+            if (!useSubmenu){
                 contextMenuId = addContextMenu(i18n_msg('contextmenu_share_single'), 'all');
             } else {
                 _log('Adding menu with children.');
@@ -82,8 +113,10 @@
                     addContextMenu(i18n_msg('contextmenu_share_all'), 'all', {'parentId': contextMenuId});
 
                     for (var c in settings.computers) {
-                        if(c !== computerId) {
-                            var menu = i18n_msg('contextmenu_share_computer', [settings.computers[c]]);
+                        if (c !== computerId) {
+                            var computer = settings.computers[c];
+                            var computerName = computer.name || computer;
+                            var menu = i18n_msg('contextmenu_share_computer', [computerName]);
                             addContextMenu(menu, 'computer_' + c, {'parentId': contextMenuId});
                         }
                     }
@@ -95,9 +128,9 @@
 
                 addContextMenu('sep1', 'sep1', {'parentId': contextMenuId, 'type': 'separator'});
 
-                if(wantsSocial) {
+                if (wantsSocial) {
                     for (var s in shareUrls) {
-                        if(settings.socialShares.indexOf(s) > -1) {
+                        if (settings.socialShares.indexOf(s) > -1) {
                             var menu = i18n_msg('contextmenu_social_' + s);
                             addContextMenu(menu, 'social_' + s, {'parentId': contextMenuId});
                         }
@@ -160,14 +193,17 @@
     }
 
     function findComputerId(){
-        if(computerId) return;
+        if (computerId) return;
 
         AppSettings.get(function(settings){
             if (settings && settings.computerId) {
                 computerId = settings.computerId;
                 _log('Found computerid: %s', computerId);
-                if(settings.computerName) {
+                if (settings.computerName) {
                     _log('Found computerName: %s', settings.computerName);
+
+                    forceUpdateComputer();
+
                     return;
                 } else {
                     settings.computerName = i18n_msg('settings_default_computername', [ computerId ]);
@@ -183,6 +219,24 @@
             AppSettings.set(settings, function(){
                 _log('Saved computer id %s name %s', settings.computerId, settings.computerName);
             });
+        });
+    }
+
+    function forceUpdateComputer() {
+        AppSettings.get(['computers', 'computerName', 'computerId'], function(settings){
+            var computer = settings.computers[settings.computerId];
+            var currentTime = new Date().getTime();
+
+            // make sure the computer doesn't get stale, we'll remove it from the menu after 30 days
+            var previousTime = new Date(); previousTime.setDate(previousTime.getDate() - 7);
+            if (computer.name === undefined || computer.update < previousTime.getTime()) {
+                _log('Refreshing computers collection.');
+                settings.computers[settings.computerId] = {
+                    name: settings.computerName,
+                    update: currentTime
+                };
+                AppSettings.set(settings);
+            }
         });
     }
 
@@ -225,6 +279,9 @@
                     var computerName = 'Unnamed ' + link.from;
                     if (items.computers && items.computers[link.from]) {
                         computerName = items.computers[link.from];
+                        if (computerName.name) {
+                            computerName = computerName.name;
+                        }
                     }
 
                     _log('Opening link to %s from computer %s.',
@@ -242,7 +299,10 @@
 
                 AppSettings.get('computers', function(items){
                     items.computers = items.computers || {};
-                    items.computers[computerId] = changes.computerName.newValue;
+                    items.computers[computerId] = {
+                        name: changes.computerName.newValue,
+                        update: (new Date().getTime())
+                    };
 
                     AppSettings.set(items);
                 });

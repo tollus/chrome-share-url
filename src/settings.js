@@ -40,6 +40,8 @@
                 console.error('Error occurred getting sync settings: %s', error);
             }
 
+            console.debug("sync settings: ", sync);
+
             chrome.storage.local.get(fields, function(local){
                 var error = chrome.runtime ?
                             chrome.runtime.lastError : chrome.extension.lastError;
