@@ -1,10 +1,10 @@
 {
   "name": "__MSG_extension_name__",
   "description": "__MSG_extension_description__",
-  "version": "0.3.6",
+  "version": "1.0",
   "permissions": ["contextMenus","storage"],
   "background": {
-    "scripts": ["background.js"],
+    "scripts": ["settings.js", "background.js"],
     "persistent": false
   },
   "default_locale": "en",

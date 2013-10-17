@@ -44,8 +44,7 @@
     function createContextMenu(force) {
         if (contextMenuId && !force) return;
 
-        chrome.storage.local.get(function(settings){
-        chrome.storage.sync.get('computers', function(items){
+        AppSettings.get(['computers', 'socialShares'], function(settings){
             var otherComputers = 0;
 
             var addContextMenu = function(title, id, extra) {
@@ -57,8 +56,8 @@
                 return chrome.contextMenus.create(opts)
             }
 
-            if(items.computers) {
-                for (var c in items.computers) {
+            if(settings.computers) {
+                for (var c in settings.computers) {
                     if(c !== computerId) {
                         otherComputers++;
                     }
@@ -75,18 +74,23 @@
             if(!useSubmenu){
                 contextMenuId = addContextMenu(i18n_msg('contextmenu_share_single'), 'all');
             } else {
-                contextMenuId = addContextMenu(i18n_msg('contextmenu_share_multi'), 'base');
-
-                _log('Adding child menus for computers.');
-                addContextMenu(i18n_msg('contextmenu_share_all'), 'all', {'parentId': contextMenuId});
+                _log('Adding menu with children.');
 
                 if (otherComputers > 1) {
-                    for (var c in items.computers) {
+                    contextMenuId = addContextMenu(i18n_msg('contextmenu_share_multi'), 'base');
+
+                    addContextMenu(i18n_msg('contextmenu_share_all'), 'all', {'parentId': contextMenuId});
+
+                    for (var c in settings.computers) {
                         if(c !== computerId) {
-                            var menu = i18n_msg('contextmenu_share_computer', [items.computers[c]]);
+                            var menu = i18n_msg('contextmenu_share_computer', [settings.computers[c]]);
                             addContextMenu(menu, 'computer_' + c, {'parentId': contextMenuId});
                         }
                     }
+                } else {
+                    contextMenuId = addContextMenu(i18n_msg('extension_name'), 'base');
+
+                    addContextMenu(i18n_msg('contextmenu_share_single'), 'all', {'parentId': contextMenuId});
                 }
 
                 addContextMenu('sep1', 'sep1', {'parentId': contextMenuId, 'type': 'separator'});
@@ -104,7 +108,6 @@
 
                 addContextMenu(i18n_msg('contextmenu_configure'), 'settings', {'parentId': contextMenuId});
             }
-        });
         });
     }
 
@@ -129,6 +132,16 @@
                     return contextMenuClick(info, tab, parts[1]);
                 case 'social':
                     _log('Sharing to social service %s', parts[1]);
+
+                    var socialUrl = shareUrls[parts[1]];
+                    if (!socialUrl) {
+                        _error('Missing link for social service %s', parts[1]);
+                        return;
+                    }
+
+                    socialUrl = socialUrl.replace(/{url}/ig, encodeURIComponent(info.linkUrl));
+
+                    chrome.tabs.create({url: socialUrl});
                     return;
             }
         }
@@ -149,14 +162,7 @@
     function findComputerId(){
         if(computerId) return;
 
-        chrome.storage.local.get(null, function(settings){
-            var error = chrome.runtime ?
-                                    chrome.runtime.lastError : chrome.extension.lastError;
-            if (error) {
-                _error('Unable to load local data: %s', error);
-                alert('Unable to load local data: ' + error);
-            }
-
+        AppSettings.get(function(settings){
             if (settings && settings.computerId) {
                 computerId = settings.computerId;
                 _log('Found computerid: %s', computerId);
@@ -174,14 +180,7 @@
                 };
             }
 
-            chrome.storage.local.set(settings, function(){
-                var error = chrome.runtime ?
-                                        chrome.runtime.lastError : chrome.extension.lastError;
-                if (error) {
-                    _error('Unable to save local data: %s', error);
-                    alert('Unable to save local data: ' + error);
-                }
-
+            AppSettings.set(settings, function(){
                 _log('Saved computer id %s name %s', settings.computerId, settings.computerName);
             });
         });
@@ -191,23 +190,10 @@
     function contextMenuClick(info, tab, to) {
         _log("link " + info.linkUrl + " clicked");
 
-        var data = {from: computerId, link: info.linkUrl, to: to || null};
+        var data = {link: {from: computerId, url: info.linkUrl, to: to || null}};
 
         // send link to other computer(s)
-        setSyncStorage(data);
-    }
-
-    function setSyncStorage(data, callback) {
-        chrome.storage.sync.set(data, function(){
-            var error = chrome.runtime ?
-                                    chrome.runtime.lastError : chrome.extension.lastError;
-            if (error) {
-                _error('Unable to sync data: %s', error);
-                alert('Unable to sync data: ' + error);
-            }
-
-            if(callback) callback();
-        });
+        AppSettings.set(data);
     }
 
     function storageChanged(changes, storageNamespace) {
@@ -218,46 +204,47 @@
             if (changes.computers) {
                 // reset the names
                 createContextMenu(true);
-                return;
             }
 
             if (changes.link) {
-                chrome.storage.sync.get(function(items){
+                AppSettings.get(['computers','link'], function(items){
+                    var link = items.link;
+
                     // invalid data set
-                    if (!items.from || !items.link) return;
+                    if (!link || !link.from) return;
 
                     // received my message, can be ignored
-                    if (items.from === computerId) return;
+                    if (link.from === computerId) return;
 
                     // received message not for me, can be ignored
-                    if (items.to && items.to !== computerId) {
-                        _log('received message not for me, ignoring... (destined for %s)', items.to);
+                    if (link.to && link.to !== computerId) {
+                        _log('received message not for me, ignoring... (destined for %s)', link.to);
                         return;
                     };
 
-                    var computerName = 'Unnamed ' + items.from;
-                    if (items.computers && items.computers[items.from]) {
-                        computerName = items.computers[items.from];
+                    var computerName = 'Unnamed ' + link.from;
+                    if (items.computers && items.computers[link.from]) {
+                        computerName = items.computers[link.from];
                     }
 
                     _log('Opening link to %s from computer %s.',
-                            items.link, computerName);
+                            link.url, computerName);
 
                     // received message from other computer, open the tab
-                    chrome.tabs.create({ url: items.link });
+                    chrome.tabs.create({ url: link.url });
                 });
             }
         } else if (storageNamespace === 'local') {
             if (changes.computerName) {
+                _log('My Computerid: ', computerId);
+                _log('ComputerName changed: ', changes.computerName.newValue);
                 // my computer name changed, so send it to other computers
 
-                chrome.storage.sync.get(function(items){
-                    items.from = computerId;
+                AppSettings.get('computers', function(items){
                     items.computers = items.computers || {};
                     items.computers[computerId] = changes.computerName.newValue;
-                    items.link = null;
 
-                    setSyncStorage(items);
+                    AppSettings.set(items);
                 });
             }
             if (changes.socialShares) {

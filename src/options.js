@@ -13,12 +13,10 @@
         $socials = $('#use-fbook, #use-gplus, #use-twit');
 		$('#save-button').button().on('click', saveChanges);
 
-		chrome.storage.local.get(null, function(items){
+        AppSettings.get(function(items){
 			var changed = false;
 
-			settings = $.extend({
-                socialShares: ''
-            }, items);
+			settings = $.extend({}, items);
 
 			if (!settings.computerName) {
 				settings.computerName = "Unnamed " + settings.computerId;
@@ -30,10 +28,14 @@
 			}
 
 			$computerName.val(settings.computerName);
+
+            var shares = settings.socialShares || '';
+
             $socials.each(function() {
-                this.checked = (settings.socialShares.indexOf(this.id.split('-')[1]) > -1);
+                var soc = this.id.split('-')[1];
+                this.checked = (shares.indexOf(soc) > -1);
             });
-		});
+        });
 	}
 
 	function saveChanges(e) {
@@ -41,25 +43,14 @@
 
         var socials = [];
         $socials.each(function() {
+            var soc = this.id.split('-')[1];
             if(this.checked) {
-                socials.push(this.id.split('-')[1]);
+                socials.push(soc);
             }
         });
         settings.socialShares = socials.join(',');
 
-		saveSettings();
-	}
-
-	function saveSettings() {
-        console.debug('saving settings: ', settings);
-		chrome.storage.local.set(settings, function() {
-		    var error = chrome.runtime ?
-		                chrome.runtime.lastError : chrome.extension.lastError;
-			if (error) {
-				console.error('Error occurred changing settings: %s', error);
-				alert('Error occurred changing settings: ' + error);
-			}
-		});
+        AppSettings.set(settings, function() {});
 	}
 
 }(jQuery));
