@@ -10,7 +10,7 @@
     function extend (target, source) {
         target = target || {};
         for (var prop in source) {
-            if (typeof source[prop] === 'object') {
+            if (source[prop] !== null && typeof source[prop] === 'object') {
                 target[prop] = extend(target[prop], source[prop]);
             } else {
                 target[prop] = source[prop];
@@ -39,8 +39,6 @@
             if (error) {
                 console.error('Error occurred getting sync settings: %s', error);
             }
-
-            console.debug("sync settings: ", sync);
 
             chrome.storage.local.get(fields, function(local){
                 var error = chrome.runtime ?

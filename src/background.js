@@ -244,7 +244,7 @@
     function contextMenuClick(info, tab, to) {
         _log("link " + info.linkUrl + " clicked");
 
-        var data = {link: {from: computerId, url: info.linkUrl, to: to || null}};
+        var data = {link: {from: computerId, url: info.linkUrl, to: to}};
 
         // send link to other computer(s)
         AppSettings.set(data);
@@ -252,9 +252,6 @@
 
     function storageChanged(changes, storageNamespace) {
         if (storageNamespace === 'sync') {
-            _log('Sync\'d content incoming: ', changes);
-            _log('My Computerid: ', computerId);
-
             if (changes.computers) {
                 // reset the names
                 createContextMenu(true);
@@ -266,6 +263,8 @@
 
                     // invalid data set
                     if (!link || !link.from) return;
+
+                    _log('link received: ', link);
 
                     // received my message, can be ignored
                     if (link.from === computerId) return;
