@@ -1,11 +1,71 @@
 ;(function(scope, undefined){
 
+	chrome.runtime.onInstalled.addListener(init);
+
 	var settings = scope.AppSettings = {
 		'get': getSettings,
 		'set': setSettings
 	};
 
 	var settingsToSync = ["socialShares", "computers", "link"];
+
+	function init() {
+		// cleanup sync settings
+		chrome.storage.sync.get(function(sync) {
+			var error = chrome.runtime ?
+						chrome.runtime.lastError : chrome.extension.lastError;
+			if (error) {
+				console.error('Error occurred checking sync settings: %s', error);
+				return;
+			}
+
+			var toRemove = [];
+			for (var x in sync) {
+				if (settingsToSync.indexOf(x) === -1) {
+					toRemove.push(x);
+				}
+			}
+
+			if (toRemove.length > 0) {
+				console.debug('cleaning up sync settings, removing props: ', toRemove);
+				chrome.storage.sync.remove(toRemove, function() {
+					var error = chrome.runtime ?
+								chrome.runtime.lastError : chrome.extension.lastError;
+					if (error) {
+						console.error('Error occurred removing sync settings: %s', error);
+					}
+				});
+			}
+		});
+
+		chrome.storage.local.get(function(local) {
+			var error = chrome.runtime ?
+						chrome.runtime.lastError : chrome.extension.lastError;
+			if (error) {
+				console.error('Error occurred checking local settings: %s', error);
+				return;
+			}
+
+			var toRemove = [];
+			if (local.from !== undefined) {
+				toRemove.push('from');
+			}
+			if (local.to !== undefined) {
+				toRemove.push('to');
+			}
+
+			if (toRemove.length > 0) {
+				console.debug('cleaning up local settings, removing props: ', toRemove);
+				chrome.storage.local.remove(toRemove, function() {
+					var error = chrome.runtime ?
+								chrome.runtime.lastError : chrome.extension.lastError;
+					if (error) {
+						console.error('Error occurred removing local settings: %s', error);
+					}
+				});
+			}
+		});
+	}
 
 	function extend (target, source) {
 		target = target || {};
@@ -42,7 +102,6 @@
 
 			for (var x in sync) {
 				// only pass along the settings to sync ...
-				// we should probably remove these from the storage too
 				if (settingsToSync.indexOf(x) === -1) {
 					delete sync[x];
 				}

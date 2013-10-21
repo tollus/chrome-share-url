@@ -195,7 +195,7 @@
 	function findComputerId(){
 		if (computerId) return;
 
-		AppSettings.get(function(settings){
+		AppSettings.get(['computerId', 'computerName'], function(settings){
 			if (settings && settings.computerId) {
 				computerId = settings.computerId;
 				_log('Found computerid: %s', computerId);

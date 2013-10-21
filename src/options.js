@@ -13,18 +13,13 @@
 		$socials = $('#use-fbook, #use-gplus, #use-twit');
 		$('#save-button').button().on('click', saveChanges);
 
-		AppSettings.get(function(items){
-			var changed = false;
-
+		// only modify the settings we're actually changing...
+		AppSettings.get(['computerName', 'socialShares'], function(items){
 			settings = $.extend({}, items);
 
 			if (!settings.computerName) {
 				settings.computerName = "Unnamed " + settings.computerId;
-				changed = true;
-			}
-
-			if (changed) {
-				AppSettings.set(settings, function() {});
+				AppSettings.set({computerName: settings.computerName});
 			}
 
 			$computerName.val(settings.computerName);
@@ -50,7 +45,7 @@
 		});
 		settings.socialShares = socials.join(',');
 
-		AppSettings.set(settings, function() {});
+		AppSettings.set(settings);
 	}
 
 }(jQuery));
