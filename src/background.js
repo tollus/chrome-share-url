@@ -1,6 +1,35 @@
 ;(function(undefined){
 	"use strict";
 
+	var LinkReplacements = {
+		'goog': function(url) {
+			// https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&ved=...&url=http%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D5pNlMgH2p-Y&ei=...
+			if (/\.google\.[^\/]+\/url\?/i.test(url) === false) {
+				// not for me
+				return false;
+			}
+
+			var changed = false;
+			var query = url.split('?', 2)[1];
+			var parts = query.split('&');
+			parts.forEach(function (part) {
+				var values = part.split('=', 2);
+				if (values[0] === 'url') {
+					// decode uri
+					url = decodeURIComponent(values[1]);
+					_log('found url ', url);
+					changed = true;
+				}
+			});
+
+			if (changed) {
+				return url;
+			}
+
+			return false;
+		}
+	};
+
 	var shareUrls = {
 		'gplus': 'https://plus.google.com/share?url={url}',
 		'twit': 'http://www.twitter.com/share?url={url}',
@@ -246,8 +275,31 @@
 
 		var data = {link: {from: computerId, url: info.linkUrl, to: to}};
 
-		// send link to other computer(s)
-		AppSettings.set(data);
+		AppSettings.get('replacements', function(settings) {
+			var replacements = settings.replacements || '';
+
+			if (replacements.length > 0) {
+				data.link.url = performRequestedReplacements(replacements, data.link.url);
+			}
+
+			// send link to other computer(s)
+			AppSettings.set(data);
+		});
+	}
+
+	function performRequestedReplacements(replacements, url) {
+		var replaces = replacements.split(',');
+
+		replaces.forEach(function(repl) {
+			if (LinkReplacements[repl]) {
+				var value = LinkReplacements[repl](url);
+				if (value !== false) {
+					url = value;
+				}
+			}
+		});
+
+		return url;
 	}
 
 	function storageChanged(changes, storageNamespace) {

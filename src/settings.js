@@ -7,7 +7,7 @@
 		'set': setSettings
 	};
 
-	var settingsToSync = ["socialShares", "computers", "link"];
+	var settingsToSync = ["socialShares", "replacements", "computers", "link"];
 
 	function init() {
 		// cleanup sync settings

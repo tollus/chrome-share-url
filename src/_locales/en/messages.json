@@ -74,6 +74,12 @@
 		"message": "Computer Name:",
 		"description": "Label for computer name in options page"
 	},
+	"options_button_save": {
+		"message": "Save Changes",
+		"description": "Text for the save button in options page"
+	},
+
+	/**** Options Social Section ***/
 	"options_legend_social" : {
 		"message": "Services",
 		"description": "Label for the box surrounding the social services"
@@ -81,10 +87,6 @@
 	"options_choose_social" : {
 		"message": "Choose which services you want to be able to share with from the menu.",
 		"description": "Message describing choosing the social services"
-	},
-	"options_button_save": {
-		"message": "Save Changes",
-		"description": "Text for the save button in options page"
 	},
 	"options_label_social_fbook": {
 		"message": "Facebook",
@@ -97,6 +99,20 @@
 	"options_label_social_twit": {
 		"message": "Twitter",
 		"description": "Checkbox label for Twitter social option"
+	},
+
+	/**** Options Replacement Section ***/
+	"options_legend_replace" : {
+		"message": "Replacements",
+		"description": "Label for the box surrounding the link replacements"
+	},
+	"options_choose_replace" : {
+		"message": "Choose replacements to perform when sharing links.",
+		"description": "Message describing choosing the link replacements"
+	},
+	"options_label_replace_goog": {
+		"message": "Remove Google Search tracking",
+		"description": "Checkbox label for removing Google search tracking option"
 	}
 
 }
