@@ -1,6 +1,5 @@
 ;(function($,undefined){
-
-	$(init);
+	'use strict';
 
 	function init() {
 		$('[i18n-content]').each(function(){
@@ -14,5 +13,7 @@
 			}
 		});
 	}
+
+	$(init);
 
 }(jQuery));
