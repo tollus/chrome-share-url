@@ -368,15 +368,15 @@
 	}
 
 	function storeLinkHistory(link) {
-		AppSettings.get('history', function(items) {
+		AppSettings.get(['history', 'historyLinks'], function(items) {
 			var history = items.history || {};
 
 			if (history.enabled === true) {
-				// force links to be an array
-				history.links = history.links || [];
-				history.links.push({href: link.url, from: link.from});
+				// separated variables so we don't need to adjust
+				var historyLinks = items.historyLinks || [];
+				historyLinks.push({href: link.url, from: link.from, received: Date.now()});
 
-				AppSettings.set({history: history});
+				AppSettings.set({history: history, historyLinks: historyLinks});
 			}
 		});
 	}

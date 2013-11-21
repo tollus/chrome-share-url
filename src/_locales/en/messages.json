@@ -117,7 +117,7 @@
 
 	/**** Options History Section ***/
 	"options_legend_history" : {
-		"message": "Share History",
+		"message": "History",
 		"description": "Label for the box surrounding the history section"
 	},
 	"options_history_message" : {
@@ -149,6 +149,10 @@
 	"options_history_ellipsis_character": {
 		"message": "\u2026",
 		"description": "Character to use for shortening links within history section. (\u2026 is ...)"
+	},
+	"options_history_dateformat": {
+		"message": "l LT",
+		"description": "Date Format of received time. (uses moment.js)"
 	}
 
 }

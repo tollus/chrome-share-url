@@ -42,6 +42,24 @@
 				clear: both;
 			}
 
+			#link-history {
+				list-style-type: none;
+				padding: 0;
+				margin: 0;
+			}
+
+			#link-history li {
+				list-style-type: none;
+				padding: 5px;
+				margin: 0;
+			}
+
+			#link-history li span {
+				display: inline-block;
+				padding-left: 5px;
+				color: rgb(0, 0, 139);
+			}
+
 		</style>
 	</head>
 	<body>
@@ -90,7 +108,14 @@
 			<div class="clear">&nbsp;</div>
 
 			<fieldset>
-				<legend i18n-content="options_legend_history">Share History</legend>
+				<legend i18n-content="options_legend_history">History</legend>
+
+				<div>
+					<label>
+						<input type="checkbox" id="enable-history" />
+						<span i18n-content="options_label_enable_history">Save history of links</span>
+					</label>
+				</div>
 
 				<div>
 					<span i18n-content="options_history_message">
@@ -98,11 +123,6 @@
 					</span>
 					<a href="#" id="history-clear" i18n-content="options_history_clear">Clear History</a>
 				</div>
-
-				<label>
-					<input type="checkbox" id="enable-history" />
-					<span i18n-content="options_label_enable_history">Save history of links</span>
-				</label>
 
 				<ul id="link-history">
 					<li i18n-content="options_label_no_history">No history available.</li>

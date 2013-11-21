@@ -1,4 +1,4 @@
-;(function($, undefined){
+;(function($, moment, undefined){
 	'use strict';
 
 	var $computerName;
@@ -24,9 +24,10 @@
 		$historyEnable = $('#enable-history');
 		$historyList = $('#link-history');
 		$('#save-button').button().on('click', saveChanges);
+		$('#history-clear').on('click', clearHistory);
 
 		// only modify the settings we're actually changing...
-		AppSettings.get(['computerName', 'computerId', 'socialShares', 'computers', 'replacements', 'history'], function(items){
+		AppSettings.get(['computerName', 'computerId', 'socialShares', 'computers', 'replacements', 'history', 'historyLinks'], function(items){
 			settings = $.extend({}, items);
 
 			if (!settings.computerName) {
@@ -40,41 +41,59 @@
 
 			$socials.each(function() {
 				var soc = this.id.split('-')[1];
-				this.checked = (shares.indexOf(soc) > -1);
+				$(this).prop('checked', (shares.indexOf(soc) > -1));
 			});
 
 			var replacements = settings.replacements || '';
 
 			$replaces.each(function() {
 				var repl = this.id.split('-')[1];
-				this.checked = (replacements.indexOf(repl) > -1);
+				$(this).prop('checked', (shares.indexOf(repl) > -1));
 			});
 
 			var history = settings.history || {};
 
+			$historyEnable.prop('checked', (history.enabled === true));
 			if (history.enabled === true) {
-				$historyEnable.attr('checked', 'checked');
-
-				if (history.links && history.links.length > 0) {
+				var links = settings.historyLinks || [];
+				if (links.length > 0) {
 					$historyList.html('');
-					$.each(history.links, function(_, value) {
-						var element = $('<li><a></a></li>');
+					links.reverse();
+
+					$.each(links, function(_, value) {
+						var element = $('<li><a></a><span></span></li>');
 						var fromComputer = settings.computers[value.from];
 						fromComputer = fromComputer.name || fromComputer;
 
+						var m = moment(value.received);
+						element.find('span')
+							.text(m.fromNow());
 						element.find('a')
 							.attr('href', value.href)
 							.attr('title', i18n_msg('options_title_history_link', [fromComputer]))
 							.text(prettyUrlTrunc(value.href, 60));
 						element.appendTo($historyList);
 					});
+				} else {
+					$historyList.html($('<li></li>').text(i18n_msg('options_label_no_history')));
 				}
+			} else {
+				$historyList.html($('<li></li>').text(i18n_msg('options_label_no_history')));
 			}
 
 			// don't want to keep these values in the local settings
+			delete settings.historyLinks;
 			delete settings.computerId;
 			delete settings.computers;
 		});
+	}
+
+	function clearHistory(e) {
+		AppSettings.set({historyLinks: []}, function() {
+			//reset
+			init();
+		});
+		return false;
 	}
 
 	function saveChanges(e) {
@@ -99,11 +118,17 @@
 		settings.replacements = replaces.join(',');
 
 		if ($historyEnable.is(':checked')) {
-			settings.history = settings.history || {};
-			settings.history.enabled = true;
+			if (settings.history.enabled !== true) {
+				settings.history = {enabled: true};
+			}
+		} else {
+			settings.history = {enabled: false};
 		}
 
-		AppSettings.set(settings);
+		AppSettings.set(settings, function() {
+			//reset
+			init();
+		});
 	}
 
 	function prettyUrlTrunc(url, length) {
@@ -151,4 +176,4 @@
 			+ (hasQueryInfo ? ellipsis : '');
 	}
 
-}(jQuery));
+}(jQuery, moment));
