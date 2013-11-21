@@ -68,6 +68,10 @@
 	}
 
 	function extend (target, source) {
+		if (Array.isArray(source)) {
+			return [].slice.call(source);
+		}
+
 		target = target || {};
 		for (var prop in source) {
 			if (source[prop] !== null && typeof source[prop] === 'object') {
