@@ -1,5 +1,5 @@
 ;(function(undefined){
-	"use strict";
+	'use strict';
 
 	var LinkReplacements = {
 		'goog': function(url) {
@@ -50,7 +50,7 @@
 
 	if (chrome.tabs) {
 		chrome.tabs.onUpdated.addListener(function(tabid, changeInfo, tab) {
-			if (tab.active && changeInfo.status === "loading")
+			if (tab.active && changeInfo.status === 'loading')
 				createContextMenu();
 		});
 		chrome.tabs.onActivated.addListener(function() {
@@ -127,7 +127,7 @@
 			var wantsSocial = (settings.socialShares || '').length > 0;
 			var useSubmenu = (otherComputers > 1) || wantsSocial;
 
-			_log("creating contextMenu");
+			_log('creating contextMenu');
 
 			chrome.contextMenus.removeAll();
 
@@ -271,7 +271,7 @@
 
 	// A generic context menu callback function.
 	function contextMenuClick(info, tab, to) {
-		_log("link " + info.linkUrl + " clicked");
+		_log('link ' + info.linkUrl + ' clicked');
 
 		var data = {link: {from: computerId, url: info.linkUrl, to: to}};
 
