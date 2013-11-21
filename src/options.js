@@ -50,10 +50,7 @@
 				this.checked = (replacements.indexOf(repl) > -1);
 			});
 
-			var history = settings.history || {enabled:true, links: [
-				{href:'https://chrome.google.com/webstore/detail/share-url/jjjfbaapeohdiokaolpoeelnccpdhofg',from:settings.computerId},
-				{href:'https://chrome.google.com/webstore/detail/share-url/jjjfbaapeohdiokaolpoeelnccpdhofg?test=1',from:settings.computerId}
-				]};
+			var history = settings.history || {};
 
 			if (history.enabled === true) {
 				$historyEnable.attr('checked', 'checked');

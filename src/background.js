@@ -327,6 +327,8 @@
 						return;
 					};
 
+					storeLinkHistory(link);
+
 					var computerName = 'Unnamed ' + link.from;
 					if (items.computers && items.computers[link.from]) {
 						computerName = items.computers[link.from];
@@ -363,6 +365,20 @@
 				createContextMenu(true);
 			}
 		}
+	}
+
+	function storeLinkHistory(link) {
+		AppSettings.get('history', function(items) {
+			var history = items.history || {};
+
+			if (history.enabled === true) {
+				// force links to be an array
+				history.links = history.links || [];
+				history.links.push({href: link.url, from: link.from});
+
+				AppSettings.set({history: history});
+			}
+		});
 	}
 
 	findComputerId();
