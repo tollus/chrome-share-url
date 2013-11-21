@@ -376,6 +376,11 @@
 				var historyLinks = items.historyLinks || [];
 				historyLinks.push({href: link.url, from: link.from, received: Date.now()});
 
+				// only store last 10 links
+				if (historyLinks.length > 10) {
+					historyLinks = historyLinks.slice(historyLinks.length - 10);
+				}
+
 				AppSettings.set({history: history, historyLinks: historyLinks});
 			}
 		});
