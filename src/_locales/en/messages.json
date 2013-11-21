@@ -113,6 +113,42 @@
 	"options_label_replace_goog": {
 		"message": "Remove Google Search tracking",
 		"description": "Checkbox label for removing Google search tracking option"
+	},
+
+	/**** Options History Section ***/
+	"options_legend_history" : {
+		"message": "Share History",
+		"description": "Label for the box surrounding the history section"
+	},
+	"options_history_message" : {
+		"message": "History is made up of links sent from this computer, or received by this computer.",
+		"description": "Message describing the history section"
+	},
+	"options_history_clear": {
+		"message": "Clear History",
+		"description": "Link for clearing the history locally"
+	},
+	"options_label_enable_history": {
+		"message": "Save history of links",
+		"description": "Label for checkbox for enabling history of links"
+	},
+	"options_label_no_history": {
+		"message": "No history available.",
+		"description": "Label for no history available"
+	},
+	"options_title_history_link": {
+		"message": "Sent by $COMPUTERNAME$",
+		"description": "Label for no history available",
+		"placeholders": {
+			"computername": {
+				"content": "$1",
+				"example": "Computer xyz123"
+			}
+		}
+	},
+	"options_history_ellipsis_character": {
+		"message": "\u2026",
+		"description": "Character to use for shortening links within history section. (\u2026 is ...)"
 	}
 
 }

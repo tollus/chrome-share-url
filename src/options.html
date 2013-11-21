@@ -89,13 +89,35 @@
 
 			<div class="clear">&nbsp;</div>
 
+			<fieldset>
+				<legend i18n-content="options_legend_history">Share History</legend>
+
+				<div>
+					<span i18n-content="options_history_message">
+						History is made up of links sent from this computer, or received by this computer.
+					</span>
+					<a href="#" id="history-clear" i18n-content="options_history_clear">Clear History</a>
+				</div>
+
+				<label>
+					<input type="checkbox" id="enable-history" />
+					<span i18n-content="options_label_enable_history">Save history of links</span>
+				</label>
+
+				<ul id="link-history">
+					<li i18n-content="options_label_no_history">No history available.</li>
+				</ul>
+			</fieldset>
+
+			<div class="clear">&nbsp;</div>
+
 			<button type="button" id="save-button" i18n-content="options_button_save">Save Changes</button>
 		</div>
 
 		<script src="settings.js"></script>
 		<script src="jquery/jquery-2.0.3.min.js"></script>
-		<script src="options-i18n.js"></script>
 		<script src="jquery/jquery-ui.min.js"></script>
+		<script src="options-i18n.js"></script>
 		<script src="options.js"></script>
 	</body>
 </html>
