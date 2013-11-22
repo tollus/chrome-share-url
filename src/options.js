@@ -51,7 +51,7 @@
 				$(this).prop('checked', (shares.indexOf(repl) > -1));
 			});
 
-			var history = settings.history || {};
+			var history = settings.history = settings.history || {enabled: false};
 
 			$historyEnable.prop('checked', (history.enabled === true));
 			if (history.enabled === true) {
@@ -117,13 +117,7 @@
 		});
 		settings.replacements = replaces.join(',');
 
-		if ($historyEnable.is(':checked')) {
-			if (settings.history.enabled !== true) {
-				settings.history = {enabled: true};
-			}
-		} else {
-			settings.history = {enabled: false};
-		}
+		settings.history = {enabled: $historyEnable.prop('checked')};
 
 		AppSettings.set(settings, function() {
 			//reset
