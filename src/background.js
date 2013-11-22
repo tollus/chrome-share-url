@@ -282,6 +282,8 @@
 				data.link.url = performRequestedReplacements(replacements, data.link.url);
 			}
 
+			storeLinkHistory(data.link);
+
 			// send link to other computer(s)
 			AppSettings.set(data);
 		});
