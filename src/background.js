@@ -106,6 +106,7 @@
 
 		AppSettings.get(['computers', 'socialShares'], function(settings){
 			var otherComputers = 0;
+			var comp;
 
 			var addContextMenu = function(title, id, extra) {
 				var opts = extra || {};
@@ -117,11 +118,11 @@
 			};
 
 			if (settings.computers) {
-				settings.computers.forEach(function(c) {
-					if (c !== computerId) {
+				for (comp in settings.computers) {
+					if (comp !== computerId) {
 						otherComputers++;
 					}
-				});
+				}
 			}
 
 			var wantsSocial = (settings.socialShares || '').length > 0;
@@ -141,14 +142,14 @@
 
 					addContextMenu(i18n_msg('contextmenu_share_all'), 'all', {'parentId': contextMenuId});
 
-					settings.computers.forEach(function(c) {
-						if (c !== computerId) {
-							var computer = settings.computers[c];
+					for (comp in settings.computers) {
+						if (comp !== computerId) {
+							var computer = settings.computers[comp];
 							var computerName = computer.name || computer;
 							var menu = i18n_msg('contextmenu_share_computer', [computerName]);
-							addContextMenu(menu, 'computer_' + c, {'parentId': contextMenuId});
+							addContextMenu(menu, 'computer_' + comp, {'parentId': contextMenuId});
 						}
-					});
+					}
 				} else {
 					contextMenuId = addContextMenu(i18n_msg('extension_name'), 'base');
 
@@ -160,8 +161,8 @@
 				if (wantsSocial) {
 					for (var s in shareUrls) {
 						if (settings.socialShares.indexOf(s) > -1) {
-							var menu = i18n_msg('contextmenu_social_' + s);
-							addContextMenu(menu, 'social_' + s, {'parentId': contextMenuId});
+							var contextmenu_social = i18n_msg('contextmenu_social_' + s);
+							addContextMenu(contextmenu_social, 'social_' + s, {'parentId': contextMenuId});
 						}
 					}
 
