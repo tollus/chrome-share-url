@@ -1,8 +1,9 @@
 ;(function(scope, undefined){
+	'use strict';
 
 	chrome.runtime.onInstalled.addListener(init);
 
-	var settings = scope.AppSettings = {
+	scope.AppSettings = {
 		'get': getSettings,
 		'set': setSettings
 	};

@@ -1,4 +1,4 @@
-;(function($, moment, undefined){
+;(function($, moment, AppSettings, undefined){
 	'use strict';
 
 	var $computerName;
@@ -48,7 +48,7 @@
 
 			$replaces.each(function() {
 				var repl = this.id.split('-')[1];
-				$(this).prop('checked', (shares.indexOf(repl) > -1));
+				$(this).prop('checked', (replacements.indexOf(repl) > -1));
 			});
 
 			var history = settings.history = settings.history || {enabled: false};
@@ -88,7 +88,7 @@
 		});
 	}
 
-	function clearHistory(e) {
+	function clearHistory() {
 		AppSettings.set({historyLinks: []}, function() {
 			//reset
 			init();
@@ -96,7 +96,7 @@
 		return false;
 	}
 
-	function saveChanges(e) {
+	function saveChanges() {
 		settings.computerName = $computerName.val();
 
 		var socials = [];
@@ -164,10 +164,10 @@
 
 		// found the domain, now let's see how much "room" we have to work with
 		var afterLength = length - (domainLength + 1);
-		return url.substring(0, domainLength + 1)
-			+ ellipsis
-			+ url.substring(url.length - afterLength)
-			+ (hasQueryInfo ? ellipsis : '');
+		return url.substring(0, domainLength + 1) +
+			ellipsis +
+			url.substring(url.length - afterLength) +
+			(hasQueryInfo ? ellipsis : '');
 	}
 
-}(jQuery, moment));
+}(jQuery, moment, window.AppSettings));

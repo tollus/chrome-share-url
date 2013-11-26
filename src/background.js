@@ -1,4 +1,4 @@
-;(function(undefined){
+;(function(AppSettings, undefined){
 	'use strict';
 
 	var LinkReplacements = {
@@ -113,15 +113,15 @@
 				opts.id = id;
 				opts.contexts = opts.contexts || ['link'];
 				opts.targetUrlPatterns = opts.targetUrlPatterns || ['http://*/*','https://*/*'];
-				return chrome.contextMenus.create(opts)
-			}
+				return chrome.contextMenus.create(opts);
+			};
 
 			if (settings.computers) {
-				for (var c in settings.computers) {
+				settings.computers.forEach(function(c) {
 					if (c !== computerId) {
 						otherComputers++;
 					}
-				}
+				});
 			}
 
 			var wantsSocial = (settings.socialShares || '').length > 0;
@@ -141,14 +141,14 @@
 
 					addContextMenu(i18n_msg('contextmenu_share_all'), 'all', {'parentId': contextMenuId});
 
-					for (var c in settings.computers) {
+					settings.computers.forEach(function(c) {
 						if (c !== computerId) {
 							var computer = settings.computers[c];
 							var computerName = computer.name || computer;
 							var menu = i18n_msg('contextmenu_share_computer', [computerName]);
 							addContextMenu(menu, 'computer_' + c, {'parentId': contextMenuId});
 						}
-					}
+					});
 				} else {
 					contextMenuId = addContextMenu(i18n_msg('extension_name'), 'base');
 
@@ -327,7 +327,7 @@
 					if (link.to && link.to !== computerId) {
 						_log('received message not for me, ignoring... (destined for %s)', link.to);
 						return;
-					};
+					}
 
 					storeLinkHistory(link);
 
@@ -389,4 +389,4 @@
 	}
 
 	findComputerId();
-}());
+}(window.AppSettings));
